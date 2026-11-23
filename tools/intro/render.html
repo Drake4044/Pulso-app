@@ -1,0 +1,44 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#12101B;overflow:hidden}#st{position:relative;width:520px;height:560px}svg{position:absolute;left:185px;top:205px;overflow:visible}</style></head><body><div id="st">
+<svg id="lg" width="150" height="150" viewBox="0 0 192 192"><defs>
+<linearGradient id="plg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8A1F"/><stop offset=".5" stop-color="#FF4A3D"/><stop offset="1" stop-color="#FF2E63"/></linearGradient>
+<filter id="pneon" filterUnits="userSpaceOnUse" x="-120" y="-120" width="432" height="432"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="a"/><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feGaussianBlur in="SourceGraphic" stdDeviation="14" result="c"/><feMerge><feMergeNode in="c"/><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="a"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<radialGradient id="pburst"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#e8fff1"/><stop offset=".7" stop-color="#5dffa0" stop-opacity=".85"/><stop offset="1" stop-color="#39ff88" stop-opacity="0"/></radialGradient>
+<radialGradient id="pflash" cx="91%" cy="21%" r="120%"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#f0fff5"/><stop offset="1" stop-color="#9dffc4"/></radialGradient>
+<radialGradient id="ring"><stop offset=".6" stop-color="#FF4A3D" stop-opacity="0"/><stop offset=".8" stop-color="#FF4A3D" stop-opacity=".5"/><stop offset="1" stop-color="#FF4A3D" stop-opacity="0"/></radialGradient></defs>
+<g id="beat" style="transform-origin:96px 96px">
+<rect id="ring" x="-20" y="-20" width="232" height="232" rx="60" fill="#FF4A3D" opacity="0" style="transform-origin:96px 96px;filter:blur(12px)"/>
+<rect id="bg" width="192" height="192" rx="44" fill="url(#plg)" opacity="0"/>
+<path id="white" d="M18 148 L50 148 L68 92 L88 136 L108 80 L126 128 L174 40" pathLength="100" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="100 100" stroke-dashoffset="100"/>
+<path id="snake" d="M18 148 L50 148 L68 92 L88 136 L108 80 L126 128 L174 40" pathLength="100" fill="none" stroke="#39ff88" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="18 130" stroke-dashoffset="18" filter="url(#pneon)" opacity="0"/>
+<g id="head"><circle id="dot" r="9" fill="#fff" stroke="#5dffa0" stroke-width="6" filter="url(#pneon)" opacity="0"/></g>
+<rect id="flash" width="192" height="192" rx="44" fill="url(#pflash)" filter="url(#pneon)" opacity="0"/>
+<circle id="burst" cx="174" cy="40" r="24" fill="url(#pburst)" opacity="0" style="transform-origin:174px 40px"/>
+</g></svg></div>
+<script>
+const $=id=>document.getElementById(id),wp=$('white'),L=wp.getTotalLength();
+function bez(x1,y1,x2,y2){return t=>{let lo=0,hi=1,u=t;for(let i=0;i<30;i++){u=(lo+hi)/2;const x=3*(1-u)**2*u*x1+3*(1-u)*u*u*x2+u**3;if(x<t)lo=u;else hi=u}return 3*(1-u)**2*u*y1+3*(1-u)*u*u*y2+u**3}}
+const sp=bez(.45,.05,.55,.95),sp2=bez(.3,0,.7,1),eo=bez(0,0,.58,1),bb=bez(.2,.7,.3,1);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+function kf(p,keys){// keys [[pos,val],...] linear between
+ for(let i=1;i<keys.length;i++){if(p<=keys[i][0]){const [a,va]=keys[i-1],[b,vb]=keys[i];return va+(vb-va)*((p-a)/(b-a||1))}}return keys[keys.length-1][1]}
+window.setT=function(ms){
+ // encendido del punto
+ const on=clamp((ms-250)/1000);let ds=1,dop=0;if(ms>=250){const e=eo(on);ds=kf(e,[[0,.2],[.3,2.1],[.55,1.5],[1,1]]);dop=kf(e,[[0,0],[.3,1],[1,1]])}
+ // recorrido
+ const u=sp(clamp((ms-520)/2600));wp.setAttribute('stroke-dashoffset',100-100*u);
+ const pt=wp.getPointAtLength(L*u);$('head').setAttribute('transform',`translate(${pt.x} ${pt.y})`);
+ let so;const ts=(ms-520)/2950;if(ms<520)so=18;else if(ts<=.88)so=18-100*sp(clamp(ts/.88));else so=-82-18*sp2(clamp((ts-.88)/.12));
+ $('snake').setAttribute('stroke-dashoffset',so);$('snake').setAttribute('opacity',ms<520?0:kf(clamp(ts),[[0,0],[.04,1],[.9,1],[1,0]]));
+ // latido del punto (después del latido general)
+ if(ms>=4080){const c=((ms-4080)%1500)/1500;ds*=kf(c,[[0,1],[.15,1.5],[.3,.95],[.45,1.3],[.7,1],[1,1]])}
+ const dot=$('dot');dot.setAttribute('transform',`scale(${ds})`);dot.setAttribute('opacity',dop);
+ // luz que cubre el cuadrado + estallido
+ const fb=clamp((ms-3050)/1200);$('flash').setAttribute('opacity',ms<3050?0:kf(fb,[[0,0],[.2,1],[.42,1],[1,0]]));
+ const bu=clamp((ms-3050)/1150);let bo=0,bs=.3;if(ms>=3050){const e=bb(bu);bo=kf(e,[[0,0],[.22,1],[.4,1],[1,0]]);bs=kf(e,[[0,.3],[.22,9],[.4,10],[1,11]])}
+ $('burst').setAttribute('opacity',bo);$('burst').style.transform=`scale(${bs})`;
+ $('bg').setAttribute('opacity',ms>=3330?1:0);
+ // un latido rápido
+ let sc=1,ro=0,rs=1;if(ms>=4080&&ms<5080){const h=(ms-4080)/1000;sc=kf(h,[[0,1],[.14,1.14],[.28,.98],[.42,1.08],[.7,1],[1,1]]);ro=kf(h,[[0,.55],[1,0]]);rs=kf(h,[[0,1],[1,1.7]])}
+ $('beat').style.transform=`scale(${sc})`;$('ring').setAttribute('opacity',ro);$('ring').style.transform=`scale(${rs})`;
+};setT(0);
+</script></body></html>

@@ -1,0 +1,5 @@
+-keepclassmembers class com.pulso.app.Bridge { @android.webkit.JavascriptInterface <methods>; }
+-keep class com.pulso.app.** { *; }
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** { *; }
+-keep class com.google.android.libraries.identity.googleid.** { *; }

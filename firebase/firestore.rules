@@ -1,0 +1,47 @@
+rules_version = '2';
+// Pulso — reglas de seguridad de Firestore.
+// Cada usuario solo puede leer y escribir sus propios datos.
+// Las contraseñas NO se guardan acá: las maneja Firebase Authentication (con hash scrypt).
+// Los datos de tarjeta NO se guardan acá: los maneja el proveedor de pagos.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function esDueno(uid) { return request.auth != null && request.auth.uid == uid; }
+
+    // Perfil, rutina y ajustes
+    match /usuarios/{uid} {
+      allow read, delete: if esDueno(uid);
+      allow create: if esDueno(uid)
+        && request.resource.data.keys().hasAll(['nombre', 'usuario', 'email', 'creadoEn'])
+        && !request.resource.data.keys().hasAny(['password', 'contraseña', 'tarjeta', 'plan']);
+      // El plan/suscripción solo lo cambia el servidor (Cloud Function de pagos)
+      allow update: if esDueno(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan', 'email', 'creadoEn']);
+
+      // Cada ejercicio terminado (modo objetivo o libre)
+      match /sesiones/{id} {
+        allow read, delete: if esDueno(uid);
+        allow create: if esDueno(uid)
+          && request.resource.data.reps is int && request.resource.data.reps >= 0
+          && request.resource.data.duracionSeg is int;
+        allow update: if false;
+      }
+      // Días de rutina completados (para el calendario y la racha)
+      match /dias/{fecha} {
+        allow read, write: if esDueno(uid);
+      }
+      // Resultados del análisis de técnica (el video NO se sube)
+      match /analisis/{id} {
+        allow read, create, delete: if esDueno(uid);
+      }
+    }
+
+    // Nombres de usuario únicos: /usuarios_nombres/martin -> { uid }
+    match /usuarios_nombres/{usuario} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+  }
+}

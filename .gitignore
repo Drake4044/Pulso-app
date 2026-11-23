@@ -1,0 +1,18 @@
+# Compilación de Android
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+# Secretos: clave de firma y sus contraseñas (nunca al repositorio)
+android/keystore.properties
+*.p12
+*.jks
+*.keystore
+*.pem
+# Copia generada de app/pulso.html (la crea scripts/build-apk.sh)
+android/app/src/main/assets/index.html
+# Varios
+__pycache__/
+node_modules/
+.DS_Store
+*.apk
